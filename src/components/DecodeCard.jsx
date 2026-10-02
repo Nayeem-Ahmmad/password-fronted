@@ -1,22 +1,28 @@
-import { useState, useRef, useEffect } from "react";
-import { decodePassword } from "../api";
+import { useEffect, useRef, useState } from "react";
+import PasswordField from "./PasswordField";
+import { decodePassword, getErrorMessage } from "../api";
 
 const REVEAL_SECONDS = 10;
 
-export default function DecodeCard() {
-  const [encodedValue, setEncodedValue] = useState("");
+export default function DecodeCard({ value, onValueChange }) {
   const [masterKey, setMasterKey] = useState("");
   const [revealed, setRevealed] = useState(null);
   const [countdown, setCountdown] = useState(REVEAL_SECONDS);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-
   const timerRef = useRef(null);
 
   useEffect(() => {
     return () => clearInterval(timerRef.current);
   }, []);
+
+  const hide = () => {
+    clearInterval(timerRef.current);
+    setRevealed(null);
+    setCopied(false);
+    setCountdown(REVEAL_SECONDS);
+  };
 
   const startCountdown = () => {
     clearInterval(timerRef.current);
@@ -35,53 +41,60 @@ export default function DecodeCard() {
   };
 
   const handleUnlock = async () => {
-    if (!encodedValue || !masterKey) {
-      setError("Encode ভ্যালু এবং Master Password দুটোই দিতে হবে।");
+    if (!value.trim() || !masterKey) {
+      setError("Paste the encode value and enter your master key.");
       return;
     }
     setLoading(true);
     setError("");
-    setRevealed(null);
+    hide();
     try {
-      const res = await decodePassword(encodedValue, masterKey);
+      const res = await decodePassword(value.trim(), masterKey);
       setRevealed(res.data.password);
-      setCopied(false);
+      setMasterKey("");
       startCountdown();
     } catch (err) {
-      setError(err?.response?.data?.detail || "ভুল Master Key অথবা Encode ভ্যালু।");
+      setError(getErrorMessage(err, "Wrong master key or encode value."));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(revealed);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(revealed);
     setCopied(true);
   };
 
   return (
-    <div className="card">
-      <h2>🔓 Decode Vault</h2>
+    <section className="panel card">
+      <h2 className="card-title">🔓 Decode Password</h2>
 
-      <label>Paste Encode Value</label>
-      <input
-        type="text"
-        placeholder="Enter something here..."
-        value={encodedValue}
-        onChange={(e) => setEncodedValue(e.target.value)}
-      />
+      <div className="field">
+        <label>Paste Encode Value</label>
+        <input
+          type="text"
+          value={value}
+          placeholder="Enter something here..."
+          onChange={(e) => onValueChange(e.target.value)}
+        />
+      </div>
 
-      <label>Master Password</label>
-      <input
-        type="password"
-        placeholder="Enter key to unlock..."
+      <PasswordField
+        label="Master Password"
         value={masterKey}
-        onChange={(e) => setMasterKey(e.target.value)}
+        onChange={setMasterKey}
+        placeholder="Enter key to unlock..."
+        autoComplete="current-password"
+        onEnter={handleUnlock}
       />
 
       {error && <p className="error-text">{error}</p>}
 
-      <button className="btn btn-green" onClick={handleUnlock} disabled={loading}>
+      <button
+        className="btn btn-green"
+        onClick={handleUnlock}
+        disabled={loading}
+      >
         {loading ? "Unlocking..." : "Unlock Original"}
       </button>
 
@@ -89,13 +102,19 @@ export default function DecodeCard() {
         <div className="reveal-box">
           <p className="reveal-password">{revealed}</p>
           <div className="reveal-actions">
-            <button className="btn btn-copy" onClick={handleCopy}>
-              {copied ? "Copied!" : "Copy"}
+            <button className="btn btn-dark" onClick={handleCopy}>
+              {copied ? "Copied" : "Copy"}
             </button>
-            <span className="countdown">{countdown}s এর মধ্যে কপি করো</span>
+            <button className="link-btn" onClick={hide}>
+              Hide now
+            </button>
+            <span className="countdown">Hides in {countdown}s</span>
+          </div>
+          <div className="reveal-progress">
+            <span style={{ width: `${(countdown / REVEAL_SECONDS) * 100}%` }} />
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
