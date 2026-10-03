@@ -1,0 +1,137 @@
+.recovery-box {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.recovery-title {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.recovery-text {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.field select {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #231f55;
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.field select:focus {
+  border-color: var(--primary-2);
+  box-shadow: 0 0 0 3px rgba(139, 123, 255, 0.25);
+}
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.check-row input {
+  margin-top: 3px;
+  accent-color: #8b7bff;
+}
+
+.warn-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 179, 71, 0.12);
+  border: 1px solid rgba(255, 179, 71, 0.45);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.question-card {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(139, 123, 255, 0.14);
+  border: 1px solid rgba(139, 123, 255, 0.4);
+}
+
+.question-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.question-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.steps {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.steps span {
+  width: 28px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.steps span.on {
+  background: var(--primary-2);
+}
+
+.banner {
+  margin-bottom: 24px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 179, 71, 0.45);
+  background: rgba(255, 179, 71, 0.1);
+}
+
+.banner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.banner-head h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+}
+
+.banner-head p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.banner .btn {
+  margin-top: 0;
+  padding: 10px 16px;
+}
+
+.banner-form {
+  max-width: 460px;
+}

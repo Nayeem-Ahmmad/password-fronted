@@ -44,12 +44,12 @@ export default function Dashboard({ name, onLock }) {
     <div className="dashboard">
       <header className="dash-header">
         <h1 className="dash-title">
-          Personal Password <span className="pro-badge">You're safe here</span>
+          Personal Vault <span className="pro-badge">PRO</span>
         </h1>
         <div className="dash-user">
-          <span className="user-chip">𓆩♡𓆪 {name}</span>
+          <span className="user-chip">👋 {name}</span>
           <button className="btn btn-ghost" onClick={onLock}>
-            Lock
+            Sign out
           </button>
         </div>
       </header>

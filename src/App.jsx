@@ -2,66 +2,94 @@ import { useEffect, useState } from "react";
 import SetupPage from "./components/SetupPage";
 import LoginPage from "./components/LoginPage";
 import Dashboard from "./components/Dashboard";
-import { fetchStatus } from "./api";
+import Footer from "./components/Footer";
+import {
+  fetchMe,
+  getToken,
+  saveToken,
+  clearToken,
+  setUnauthorizedHandler,
+} from "./api";
 import "./App.css";
+import "./Recovery.css";
+import "./Footer.css";
 
-const SESSION_KEY = "vault_unlocked";
+function Shell({ children, full = false }) {
+  return (
+    <div className="shell">
+      {children}
+      <Footer compact={!full} />
+    </div>
+  );
+}
 
 export default function App() {
   const [stage, setStage] = useState("loading");
+  const [view, setView] = useState("login");
   const [name, setName] = useState("");
+  const [notice, setNotice] = useState("");
   const [offline, setOffline] = useState(false);
+
+  const goToAuth = (message = "") => {
+    setNotice(message);
+    setView("login");
+    setStage("auth");
+  };
 
   const boot = async () => {
     setOffline(false);
+    if (!getToken()) {
+      setStage("auth");
+      return;
+    }
     setStage("loading");
     try {
-      const res = await fetchStatus();
-      if (!res.data.configured) {
-        setStage("setup");
-        return;
-      }
+      const res = await fetchMe();
       setName(res.data.name);
-      setStage(sessionStorage.getItem(SESSION_KEY) ? "dashboard" : "login");
-    } catch {
-      setOffline(true);
+      setStage("dashboard");
+    } catch (err) {
+      if (err?.response) {
+        clearToken();
+        goToAuth();
+      } else {
+        setOffline(true);
+      }
     }
   };
 
   useEffect(() => {
+    setUnauthorizedHandler(() => goToAuth("Your session expired. Sign in again."));
     boot();
   }, []);
 
-  const handleSetupDone = (savedName) => {
-    setName(savedName);
-    setStage("login");
-  };
-
-  const handleUnlocked = (savedName) => {
-    sessionStorage.setItem(SESSION_KEY, "1");
-    setName(savedName);
+  const handleAuthenticated = (data) => {
+    saveToken(data.token);
+    setName(data.name);
+    setNotice("");
     setStage("dashboard");
   };
 
   const handleLock = () => {
-    sessionStorage.removeItem(SESSION_KEY);
-    setStage("login");
+    clearToken();
+    goToAuth();
   };
 
   if (offline) {
     return (
-      <main className="center-screen">
-        <section className="panel auth-panel">
-          <div className="panel-icon">📡</div>
-          <h1 className="panel-title">Server not reachable</h1>
-          <p className="panel-sub">
-            Start the Django server on port 8000, then try again.
-          </p>
-          <button className="btn btn-primary" onClick={boot}>
-            Try again
-          </button>
-        </section>
-      </main>
+      <Shell>
+        <main className="center-screen">
+          <section className="panel auth-panel">
+            <div className="panel-icon">📡</div>
+            <h1 className="panel-title">Server not reachable</h1>
+            <p className="panel-sub">
+              Check your connection or start the Django server, then try again.
+            </p>
+            <button className="btn btn-primary" onClick={boot}>
+              Try again
+            </button>
+          </section>
+        </main>
+      </Shell>
     );
   }
 
@@ -73,21 +101,33 @@ export default function App() {
     );
   }
 
-  if (stage === "setup") {
+  if (stage === "auth") {
     return (
-      <main className="center-screen">
-        <SetupPage onDone={handleSetupDone} />
-      </main>
+      <Shell>
+        <main className="center-screen">
+          {view === "register" ? (
+            <SetupPage
+              onAuthenticated={handleAuthenticated}
+              onSwitch={() => setView("login")}
+            />
+          ) : (
+            <LoginPage
+              notice={notice}
+              onAuthenticated={handleAuthenticated}
+              onSwitch={() => {
+                setNotice("");
+                setView("register");
+              }}
+            />
+          )}
+        </main>
+      </Shell>
     );
   }
 
-  if (stage === "login") {
-    return (
-      <main className="center-screen">
-        <LoginPage name={name} onUnlocked={handleUnlocked} />
-      </main>
-    );
-  }
-
-  return <Dashboard name={name} onLock={handleLock} />;
+  return (
+    <Shell full>
+      <Dashboard name={name} onLock={handleLock} />
+    </Shell>
+  );
 }
