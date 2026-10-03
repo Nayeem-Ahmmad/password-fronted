@@ -59,7 +59,7 @@ export default function Footer({ compact = false }) {
           ))}
         </div>
         <p className="footer-copy">
-          &copy; {year} Personal Vault. All rights reserved.
+          &copy; {year} Personal Password. All rights reserved.
         </p>
         <p className="footer-credit">
           Designed and developed by <strong>{DEVELOPER}</strong>

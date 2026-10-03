@@ -223,7 +223,7 @@ export default function LoginPage({ notice, onAuthenticated, onSwitch }) {
   return (
     <section className="panel auth-panel">
       <div className="panel-icon">🔐</div>
-      <h1 className="panel-title">Sign in to your vault</h1>
+      <h1 className="panel-title">Sign in to your Password</h1>
       <p className="panel-sub">Use your name and master key.</p>
 
       <div className="field">
@@ -260,7 +260,7 @@ export default function LoginPage({ notice, onAuthenticated, onSwitch }) {
         Forgot master key? Reset it
       </button>
       <button className="link-btn" onClick={onSwitch}>
-        New here? Create a vault
+        New here? Create a Password
       </button>
     </section>
   );

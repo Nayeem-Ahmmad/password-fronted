@@ -62,8 +62,8 @@ export default function SetupPage({ onAuthenticated, onSwitch }) {
 
   return (
     <section className="panel auth-panel">
-      <div className="panel-icon">👋</div>
-      <h1 className="panel-title">Create your vault</h1>
+      <div className="panel-icon">𓆩♡𓆪</div>
+      <h1 className="panel-title">Create your Password</h1>
       <p className="panel-sub">
         Your name and master key are how you sign in. Passwords are stored
         encrypted, locked by a key that your master key unlocks.
@@ -116,10 +116,10 @@ export default function SetupPage({ onAuthenticated, onSwitch }) {
         onClick={handleSubmit}
         disabled={loading}
       >
-        {loading ? "Creating..." : "Create vault"}
+        {loading ? "Creating..." : "Create Password"}
       </button>
       <button className="link-btn" onClick={onSwitch}>
-        Already have a vault? Sign in
+        Already have a Password? Sign in
       </button>
     </section>
   );

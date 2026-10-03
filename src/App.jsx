@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SetupPage from "./components/SetupPage";
 import LoginPage from "./components/LoginPage";
 import Dashboard from "./components/Dashboard";
@@ -13,6 +13,9 @@ import {
 import "./App.css";
 import "./Recovery.css";
 import "./Footer.css";
+
+const INACTIVITY_LIMIT_MS = 5 * 60 * 1000; // 5 minutes
+const ACTIVITY_EVENTS = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"];
 
 function Shell({ children, full = false }) {
   return (
@@ -29,6 +32,8 @@ export default function App() {
   const [name, setName] = useState("");
   const [notice, setNotice] = useState("");
   const [offline, setOffline] = useState(false);
+
+  const inactivityTimer = useRef(null);
 
   const goToAuth = (message = "") => {
     setNotice(message);
@@ -73,6 +78,32 @@ export default function App() {
     clearToken();
     goToAuth();
   };
+
+  const handleAutoLock = () => {
+    clearToken();
+    goToAuth("You were signed out after 5 minutes of inactivity.");
+  };
+
+  // --- inactivity watcher: only active while the dashboard is open ---
+  useEffect(() => {
+    if (stage !== "dashboard") {
+      clearTimeout(inactivityTimer.current);
+      return;
+    }
+
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = setTimeout(handleAutoLock, INACTIVITY_LIMIT_MS);
+    };
+
+    resetTimer();
+    ACTIVITY_EVENTS.forEach((evt) => window.addEventListener(evt, resetTimer));
+
+    return () => {
+      clearTimeout(inactivityTimer.current);
+      ACTIVITY_EVENTS.forEach((evt) => window.removeEventListener(evt, resetTimer));
+    };
+  }, [stage]);
 
   if (offline) {
     return (
