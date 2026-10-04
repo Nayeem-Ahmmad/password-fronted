@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import PasswordField from "./PasswordField";
 import RecoveryFields from "./RecoveryFields";
 import { registerAccount, getErrorMessage } from "../api";
@@ -22,27 +23,39 @@ export default function SetupPage({ onAuthenticated, onSwitch }) {
   const [rec, setRec] = useState(emptyRecovery());
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
 
   const strength = key ? getStrength(key) : 0;
 
-  const handleSubmit = async () => {
+  const validate = () => {
     if (name.trim().length < 2 || !key || !confirm) {
       setError("Enter your name and fill in both master key fields.");
-      return;
+      return false;
     }
     if (key.length < 8) {
       setError("Master key must be at least 8 characters.");
-      return;
+      return false;
     }
     if (key !== confirm) {
       setError("Both master keys must match.");
-      return;
+      return false;
     }
     const problem = validateRecovery(rec, key);
     if (problem) {
       setError(problem);
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleReview = () => {
+    setError("");
+    if (validate()) {
+      setShowWarning(true);
+    }
+  };
+
+  const handleConfirmCreate = async () => {
     setLoading(true);
     setError("");
     try {
@@ -52,8 +65,10 @@ export default function SetupPage({ onAuthenticated, onSwitch }) {
         recoveryQuestion(rec),
         rec.answer
       );
+      setShowWarning(false);
       onAuthenticated(res.data);
     } catch (err) {
+      setShowWarning(false);
       setError(getErrorMessage(err, "Could not create your account."));
     } finally {
       setLoading(false);
@@ -111,16 +126,50 @@ export default function SetupPage({ onAuthenticated, onSwitch }) {
 
       {error && <p className="error-text">{error}</p>}
 
-      <button
-        className="btn btn-primary"
-        onClick={handleSubmit}
-        disabled={loading}
-      >
+      <button className="btn btn-primary" onClick={handleReview} disabled={loading}>
         {loading ? "Creating..." : "Create Password"}
       </button>
       <button className="link-btn" onClick={onSwitch}>
         Already have a Password? Sign in
       </button>
+
+      {showWarning &&
+        createPortal(
+          <div className="modal-overlay" onClick={() => !loading && setShowWarning(false)}>
+            <div className="modal-card warning-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="warning-icon">⚠️</div>
+              <h3 className="modal-title">Before you continue</h3>
+              <p className="panel-sub">
+                Your master key and recovery answer are the <b>only</b> way to unlock
+                your password. Nobody — not even the developer — can reset or recover
+                them for you.
+              </p>
+              <p className="panel-sub warning-strong">
+                If you forget your master key <u><b>and</b></u> your recovery answer at the
+                same time, every password stored here will be permanently and
+                irreversibly lost.
+              </p>
+
+              <div className="modal-actions">
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setShowWarning(false)}
+                  disabled={loading}
+                >
+                  Go back
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleConfirmCreate}
+                  disabled={loading}
+                >
+                  {loading ? "Creating..." : "I understand, Continue"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </section>
   );
 }

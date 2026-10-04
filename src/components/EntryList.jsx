@@ -18,7 +18,9 @@ const ITEMS_PER_PAGE = 9;
 export default function EntryList({ entries, loading, onUse, onDelete, onUpdate }) {
   const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState(null);
-  const [confirmId, setConfirmId] = useState(null);
+  // const [confirmId, setConfirmId] = useState(null);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [editingId, setEditingId] = useState(null);
@@ -34,6 +36,15 @@ export default function EntryList({ entries, loading, onUse, onDelete, onUpdate 
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  const deleteTarget = entries.find((e) => e.id === deleteTargetId);
+
+const confirmDelete = async () => {
+  setDeleteLoading(true);
+  await onDelete(deleteTargetId);
+  setDeleteLoading(false);
+  setDeleteTargetId(null);
+};
 
   const filtered = entries.filter((e) =>
     e.name.toLowerCase().includes(query.trim().toLowerCase())
@@ -149,26 +160,31 @@ export default function EntryList({ entries, loading, onUse, onDelete, onUpdate 
                   <button className="link-btn" onClick={() => startEdit(entry)}>
                     Edit
                   </button>
-                  {confirmId === entry.id ? (
-                    <span className="confirm-group">
-                      <button
-                        className="link-btn danger"
-                        onClick={() => {
-                          onDelete(entry.id);
-                          setConfirmId(null);
-                        }}
-                      >
-                        Confirm
-                      </button>
-                      <button className="link-btn" onClick={() => setConfirmId(null)}>
-                        Cancel
-                      </button>
-                    </span>
-                  ) : (
-                    <button className="link-btn danger" onClick={() => setConfirmId(entry.id)}>
-                      Delete
-                    </button>
-                  )}
+                        {deleteTargetId && (
+                        <div className="modal-overlay" onClick={() => !deleteLoading && setDeleteTargetId(null)}>
+                          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                            <h3 className="modal-title">Delete this entry?</h3>
+                            <p className="panel-sub">
+                              {deleteTarget
+                                ? `"${deleteTarget.name}" will be permanently removed. This cannot be undone.`
+                                : "This entry will be permanently removed."}
+                            </p>
+
+                            <div className="modal-actions">
+                              <button
+                                className="btn btn-ghost"
+                                onClick={() => setDeleteTargetId(null)}
+                                disabled={deleteLoading}
+                              >
+                                Cancel
+                              </button>
+                              <button className="btn btn-danger" onClick={confirmDelete} disabled={deleteLoading}>
+                                {deleteLoading ? "Deleting..." : "Delete permanently"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                 </div>
               </article>
             ))}

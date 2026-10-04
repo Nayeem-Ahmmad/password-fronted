@@ -256,12 +256,14 @@ export default function LoginPage({ notice, onAuthenticated, onSwitch }) {
       >
         {loading ? "Signing in..." : "Sign in"}
       </button>
-      <button className="link-btn" onClick={() => switchMode("verify")}>
-        Forgot master key? Reset it
-      </button>
-      <button className="link-btn" onClick={onSwitch}>
-        New here? Create a Password
-      </button>
+      <div className="auth-link-row">
+        <button className="link-btn auth-link" onClick={() => switchMode("verify")}>
+          Forgot master key?
+        </button>
+        <button className="link-btn auth-link" onClick={onSwitch}>
+          New here? Create one
+        </button>
+      </div>
     </section>
   );
 }
