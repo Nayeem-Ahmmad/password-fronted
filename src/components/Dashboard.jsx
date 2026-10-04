@@ -65,10 +65,10 @@ export default function Dashboard({ name, onLock }) {
     <div className="dashboard">
       <header className="dash-header">
         <h1 className="dash-title">
-          Personal Vault <span className="pro-badge">PRO</span>
+          Personal Password <span className="pro-badge">You're Safe Here</span>
         </h1>
         <div className="dash-user">
-          <span className="user-chip">👋 {name}</span>
+          <span className="user-chip">𓆩♡𓆪 Hi, {name}</span>
           <button className="btn btn-ghost" onClick={onLock}>
             Sign out
           </button>
