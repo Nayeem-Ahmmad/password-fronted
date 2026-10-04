@@ -1,4 +1,10 @@
 import { useEffect, useState } from "react";
+import PasswordField from "./PasswordField";
+import { getErrorMessage } from "../api";
+const MAX_NAME_LENGTH = 20;
+
+const truncateName = (name) =>
+  name.length > MAX_NAME_LENGTH ? `${name.slice(0, MAX_NAME_LENGTH)}...` : name;
 
 const formatDate = (iso) =>
   new Date(iso).toLocaleDateString("en-GB", {
@@ -9,11 +15,19 @@ const formatDate = (iso) =>
 
 const ITEMS_PER_PAGE = 9;
 
-export default function EntryList({ entries, loading, onUse, onDelete }) {
+export default function EntryList({ entries, loading, onUse, onDelete, onUpdate }) {
   const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [changePassword, setChangePassword] = useState(false);
+  const [editPassword, setEditPassword] = useState("");
+  const [editMasterKey, setEditMasterKey] = useState("");
+  const [editError, setEditError] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
 
   const handleCopy = async (id, value) => {
     await navigator.clipboard.writeText(value);
@@ -37,6 +51,49 @@ export default function EntryList({ entries, loading, onUse, onDelete }) {
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
+  };
+
+  const startEdit = (entry) => {
+    setEditingId(entry.id);
+    setEditName(entry.name);
+    setChangePassword(false);
+    setEditPassword("");
+    setEditMasterKey("");
+    setEditError("");
+  };
+
+  const cancelEdit = () => {
+    if (editLoading) return;
+    setEditingId(null);
+    setEditError("");
+  };
+
+  const saveEdit = async () => {
+    if (!editName.trim()) {
+      setEditError("Name cannot be empty.");
+      return;
+    }
+    if (changePassword && (!editPassword || !editMasterKey)) {
+      setEditError("Enter the new password and your master key.");
+      return;
+    }
+
+    const payload = { name: editName.trim() };
+    if (changePassword) {
+      payload.password = editPassword;
+      payload.master_key = editMasterKey;
+    }
+
+    setEditLoading(true);
+    setEditError("");
+    try {
+      await onUpdate(editingId, payload);
+      setEditingId(null);
+    } catch (err) {
+      setEditError(getErrorMessage(err, "Could not update this entry."));
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   if (loading) {
@@ -75,7 +132,7 @@ export default function EntryList({ entries, loading, onUse, onDelete }) {
             {visibleEntries.map((entry) => (
               <article className="entry-card" key={entry.id}>
                 <div className="entry-top">
-                  <h3>{entry.name}</h3>
+                  <h3 title={entry.name}>{truncateName(entry.name)}</h3>
                   <span className="entry-date">{formatDate(entry.created_at)}</span>
                 </div>
                 <p className="encoded-text">{entry.encoded_password}</p>
@@ -86,11 +143,11 @@ export default function EntryList({ entries, loading, onUse, onDelete }) {
                   >
                     {copiedId === entry.id ? "Copied" : "Copy Encode"}
                   </button>
-                  <button
-                    className="link-btn"
-                    onClick={() => onUse(entry.encoded_password)}
-                  >
+                  <button className="link-btn" onClick={() => onUse(entry.encoded_password)}>
                     Use in Decode
+                  </button>
+                  <button className="link-btn" onClick={() => startEdit(entry)}>
+                    Edit
                   </button>
                   {confirmId === entry.id ? (
                     <span className="confirm-group">
@@ -103,18 +160,12 @@ export default function EntryList({ entries, loading, onUse, onDelete }) {
                       >
                         Confirm
                       </button>
-                      <button
-                        className="link-btn"
-                        onClick={() => setConfirmId(null)}
-                      >
+                      <button className="link-btn" onClick={() => setConfirmId(null)}>
                         Cancel
                       </button>
                     </span>
                   ) : (
-                    <button
-                      className="link-btn danger"
-                      onClick={() => setConfirmId(entry.id)}
-                    >
+                    <button className="link-btn danger" onClick={() => setConfirmId(entry.id)}>
                       Delete
                     </button>
                   )}
@@ -153,6 +204,63 @@ export default function EntryList({ entries, loading, onUse, onDelete }) {
             </div>
           )}
         </>
+      )}
+
+      {editingId && (
+        <div className="modal-overlay" onClick={cancelEdit}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">Edit entry</h3>
+
+            <div className="field">
+              <label>Description</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={changePassword}
+                onChange={(e) => setChangePassword(e.target.checked)}
+              />
+              Change password
+            </label>
+
+            {changePassword && (
+              <>
+                <PasswordField
+                  label="New password"
+                  value={editPassword}
+                  onChange={setEditPassword}
+                  placeholder="Enter new password"
+                  autoComplete="new-password"
+                />
+                <PasswordField
+                  label="Master key"
+                  value={editMasterKey}
+                  onChange={setEditMasterKey}
+                  placeholder="Confirm your master key"
+                  autoComplete="current-password"
+                />
+              </>
+            )}
+
+            {editError && <p className="error-text">{editError}</p>}
+
+            <div className="modal-actions">
+              <button className="btn btn-ghost" onClick={cancelEdit} disabled={editLoading}>
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={saveEdit} disabled={editLoading}>
+                {editLoading ? "Saving..." : "Save changes"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

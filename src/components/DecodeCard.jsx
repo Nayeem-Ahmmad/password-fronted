@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import PasswordField from "./PasswordField";
 import { decodePassword, getErrorMessage } from "../api";
 
@@ -98,23 +99,33 @@ export default function DecodeCard({ value, onValueChange }) {
         {loading ? "Unlocking..." : "Unlock Original"}
       </button>
 
-      {revealed && (
-        <div className="reveal-box">
-          <p className="reveal-password">{revealed}</p>
-          <div className="reveal-actions">
-            <button className="btn btn-dark" onClick={handleCopy}>
-              {copied ? "Copied" : "Copy"}
-            </button>
-            <button className="link-btn" onClick={hide}>
-              Hide now
-            </button>
-            <span className="countdown">Hides in {countdown}s</span>
-          </div>
-          <div className="reveal-progress">
-            <span style={{ width: `${(countdown / REVEAL_SECONDS) * 100}%` }} />
-          </div>
-        </div>
-      )}
+            {revealed &&
+        createPortal(
+          <div className="modal-overlay" onClick={hide}>
+            <div className="modal-card reveal-modal" onClick={(e) => e.stopPropagation()}>
+              <h3 className="modal-title">Unlocked password</h3>
+
+              <div className="reveal-display">
+                <p className="reveal-password">{revealed}</p>
+              </div>
+
+              <div className="reveal-progress">
+                <span style={{ width: `${(countdown / REVEAL_SECONDS) * 100}%` }} />
+              </div>
+              <p className="countdown-text">Hides automatically in {countdown}s</p>
+
+              <div className="modal-actions">
+                <button className="btn btn-ghost" onClick={hide}>
+                  Hide now
+                </button>
+                <button className="btn btn-primary" onClick={handleCopy}>
+                  {copied ? "Copied" : "Copy password"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </section>
   );
 }

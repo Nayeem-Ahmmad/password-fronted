@@ -325,41 +325,30 @@
   width: auto;
 }
 
-.reveal-box {
-  margin-top: 20px;
-  padding: 16px;
-  border-radius: 14px;
+.reveal-modal {
+  max-width: 400px;
+  text-align: center;
+}
+
+.reveal-display {
   background: rgba(108, 92, 231, 0.14);
   border: 1px dashed var(--primary-2);
+  border-radius: 14px;
+  padding: 20px 16px;
+  margin-bottom: 16px;
 }
 
 .reveal-password {
-  margin: 0 0 12px;
-  font-size: 1.1rem;
+  margin: 0;
+  font-size: 1.3rem;
   font-weight: 700;
   word-break: break-all;
-}
-
-.reveal-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.reveal-actions .link-btn {
-  margin-top: 0;
-}
-
-.countdown {
-  margin-left: auto;
-  font-size: 0.78rem;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .reveal-progress {
-  margin-top: 12px;
-  height: 3px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.12);
   overflow: hidden;
 }
@@ -367,8 +356,18 @@
 .reveal-progress span {
   display: block;
   height: 100%;
-  background: var(--primary-2);
+  background: linear-gradient(90deg, var(--primary), var(--primary-2));
   transition: width 1s linear;
+}
+
+.countdown-text {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.reveal-modal .modal-actions {
+  justify-content: center;
 }
 
 .entries {
@@ -424,9 +423,10 @@
 }
 
 .entry-top h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .entry-date {
@@ -447,11 +447,19 @@
 .entry-actions {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 16px;
+  flex-wrap: nowrap;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.entry-actions::-webkit-scrollbar {
+  display: none;
 }
 
 .entry-actions .link-btn {
+  flex-shrink: 0;
+  font-size: 0.78rem;
   text-decoration: none;
 }
 
@@ -557,4 +565,131 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* 
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+} */
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+.checkbox-row input {
+  width: auto;
+}
+
+.generator-panel {
+  margin-top: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed var(--border);
+}
+
+.slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.slider-row label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.slider-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--primary-2);
+}
+
+.toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.entry-grid {
+  align-items: start;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 30, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+  animation: overlay-fade 0.15s ease;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-panel);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modal-pop 0.18s ease;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  margin-bottom: 18px;
+  color: var(--text);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-actions .btn,
+.modal-actions .btn-ghost,
+.modal-actions .btn-primary {
+  width: auto;
+  min-width: 110px;
+  height: 44px;
+  padding: 0 22px;
+  margin-top: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 44px;
+  box-sizing: border-box;
+}
+
+@keyframes overlay-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }

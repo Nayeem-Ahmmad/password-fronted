@@ -68,3 +68,6 @@ export const decodePassword = (encoded_password, master_key) =>
   http.post("/decode/", { encoded_password, master_key });
 
 export const deleteEntry = (id) => http.delete(`/entries/${id}/`);
+
+export const updateEntry = (id, payload) => http.patch(`/entries/${id}/`, payload);
+export const exportBackup = () => http.get("/backup/export/");
