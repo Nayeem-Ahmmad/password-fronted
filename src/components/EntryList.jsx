@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import PasswordField from "./PasswordField";
 import { getErrorMessage } from "../api";
+
 const MAX_NAME_LENGTH = 20;
+const ITEMS_PER_PAGE = 9;
 
 const truncateName = (name) =>
   name.length > MAX_NAME_LENGTH ? `${name.slice(0, MAX_NAME_LENGTH)}...` : name;
@@ -13,15 +15,13 @@ const formatDate = (iso) =>
     year: "numeric",
   });
 
-const ITEMS_PER_PAGE = 9;
-
 export default function EntryList({ entries, loading, onUse, onDelete, onUpdate }) {
   const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState(null);
-  // const [confirmId, setConfirmId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
 
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
@@ -36,15 +36,6 @@ export default function EntryList({ entries, loading, onUse, onDelete, onUpdate 
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
-
-  const deleteTarget = entries.find((e) => e.id === deleteTargetId);
-
-const confirmDelete = async () => {
-  setDeleteLoading(true);
-  await onDelete(deleteTargetId);
-  setDeleteLoading(false);
-  setDeleteTargetId(null);
-};
 
   const filtered = entries.filter((e) =>
     e.name.toLowerCase().includes(query.trim().toLowerCase())
@@ -64,6 +55,17 @@ const confirmDelete = async () => {
     setCurrentPage(page);
   };
 
+  // ---------- delete ----------
+  const deleteTarget = entries.find((e) => e.id === deleteTargetId);
+
+  const confirmDelete = async () => {
+    setDeleteLoading(true);
+    await onDelete(deleteTargetId);
+    setDeleteLoading(false);
+    setDeleteTargetId(null);
+  };
+
+  // ---------- edit ----------
   const startEdit = (entry) => {
     setEditingId(entry.id);
     setEditName(entry.name);
@@ -160,31 +162,9 @@ const confirmDelete = async () => {
                   <button className="link-btn" onClick={() => startEdit(entry)}>
                     Edit
                   </button>
-                        {deleteTargetId && (
-                        <div className="modal-overlay" onClick={() => !deleteLoading && setDeleteTargetId(null)}>
-                          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-                            <h3 className="modal-title">Delete this entry?</h3>
-                            <p className="panel-sub">
-                              {deleteTarget
-                                ? `"${deleteTarget.name}" will be permanently removed. This cannot be undone.`
-                                : "This entry will be permanently removed."}
-                            </p>
-
-                            <div className="modal-actions">
-                              <button
-                                className="btn btn-ghost"
-                                onClick={() => setDeleteTargetId(null)}
-                                disabled={deleteLoading}
-                              >
-                                Cancel
-                              </button>
-                              <button className="btn btn-danger" onClick={confirmDelete} disabled={deleteLoading}>
-                                {deleteLoading ? "Deleting..." : "Delete permanently"}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                  <button className="link-btn danger" onClick={() => setDeleteTargetId(entry.id)}>
+                    Delete
+                  </button>
                 </div>
               </article>
             ))}
@@ -220,6 +200,32 @@ const confirmDelete = async () => {
             </div>
           )}
         </>
+      )}
+
+      {deleteTargetId && (
+        <div className="modal-overlay" onClick={() => !deleteLoading && setDeleteTargetId(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">Delete this entry?</h3>
+            <p className="panel-sub">
+              {deleteTarget
+                ? `"${deleteTarget.name}" will be permanently removed. This cannot be undone.`
+                : "This entry will be permanently removed."}
+            </p>
+
+            <div className="modal-actions">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setDeleteTargetId(null)}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-danger" onClick={confirmDelete} disabled={deleteLoading}>
+                {deleteLoading ? "Deleting..." : "Delete permanently"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {editingId && (
