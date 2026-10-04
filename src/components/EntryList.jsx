@@ -206,7 +206,7 @@ export default function EntryList({ entries, loading, onUse, onDelete, onUpdate 
         <div className="modal-overlay" onClick={() => !deleteLoading && setDeleteTargetId(null)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <h3 className="modal-title">Delete this entry?</h3>
-            <p className="panel-sub">
+            <p className="panel-sub modal-sub-left">
               {deleteTarget
                 ? `"${deleteTarget.name}" will be permanently removed. This cannot be undone.`
                 : "This entry will be permanently removed."}
