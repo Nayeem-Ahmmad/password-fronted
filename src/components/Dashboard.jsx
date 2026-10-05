@@ -4,11 +4,20 @@ import DecodeCard from "./DecodeCard";
 import EntryList from "./EntryList";
 import { fetchEntries, deleteEntry, updateEntry, exportBackup, getErrorMessage } from "../api";
 
+const DAILY_LIMIT = 20;
+  
 export default function Dashboard({ name, onLock }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [decodeValue, setDecodeValue] = useState("");
+
+  const dailyCount = entries.filter((e) => {
+    const createdAt = new Date(e.created_at).getTime();
+    return createdAt >= Date.now() - 24 * 60 * 60 * 1000;
+  }).length;
+
+  const loadEntries = useCallback(async () => {
 
   const loadEntries = useCallback(async () => {
     try {
