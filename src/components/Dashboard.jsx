@@ -2,22 +2,31 @@ import { useCallback, useEffect, useState } from "react";
 import EncodeCard from "./EncodeCard";
 import DecodeCard from "./DecodeCard";
 import EntryList from "./EntryList";
-import { fetchEntries, deleteEntry, updateEntry, exportBackup, getErrorMessage } from "../api";
+import {
+  fetchEntries,
+  fetchUsage,
+  deleteEntry,
+  updateEntry,
+  exportBackup,
+  getErrorMessage,
+} from "../api";
 
-const DAILY_LIMIT = 20;
-  
 export default function Dashboard({ name, onLock }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [decodeValue, setDecodeValue] = useState("");
 
-  const dailyCount = entries.filter((e) => {
-    const createdAt = new Date(e.created_at).getTime();
-    return createdAt >= Date.now() - 24 * 60 * 60 * 1000;
-  }).length;
+  const [usage, setUsage] = useState(null);
 
-  const loadEntries = useCallback(async () => {
+  const loadUsage = useCallback(async () => {
+    try {
+      const res = await fetchUsage();
+      setUsage(res.data);
+    } catch {
+      setUsage(null);
+    }
+  }, []);
 
   const loadEntries = useCallback(async () => {
     try {
@@ -30,6 +39,11 @@ export default function Dashboard({ name, onLock }) {
       setLoading(false);
     }
   }, []);
+
+  const handleSaved = useCallback(() => {
+    loadEntries();
+    loadUsage();
+  }, [loadEntries, loadUsage]);
 
   const handleBackup = async () => {
   try {
@@ -48,7 +62,8 @@ export default function Dashboard({ name, onLock }) {
 
   useEffect(() => {
     loadEntries();
-  }, [loadEntries]);
+    loadUsage();
+  }, [loadEntries, loadUsage]);
 
   const handleDelete = async (id) => {
     try {
@@ -85,7 +100,7 @@ export default function Dashboard({ name, onLock }) {
       </header>
 
       <div className="cards-row">
-        <EncodeCard onSaved={loadEntries} />
+        <EncodeCard onSaved={handleSaved} usage={usage} />
         <DecodeCard value={decodeValue} onValueChange={setDecodeValue} />
       </div>
 

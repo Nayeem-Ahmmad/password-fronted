@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PasswordField from "./PasswordField";
 import { encodePassword, getErrorMessage } from "../api";
+import "../Usage.css";
 
 const UPPER = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const LOWER = "abcdefghijkmnopqrstuvwxyz";
@@ -20,7 +21,28 @@ const generatePassword = (length, options) => {
   return Array.from(values, (v) => charset[v % charset.length]).join("");
 };
 
-export default function EncodeCard({ onSaved }) {
+const formatWait = (iso) => {
+  if (!iso) return "";
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms <= 0) return "a moment";
+  const minutes = Math.ceil(ms / 60000);
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}m`;
+  return `${h}h ${m}m`;
+};
+
+export default function EncodeCard({ onSaved, usage }) {
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const limitReached = Boolean(usage) && usage.remaining <= 0;
+  const percent = usage ? Math.min(100, (usage.used / usage.limit) * 100) : 0;
+
   const [label, setLabel] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,6 +57,7 @@ export default function EncodeCard({ onSaved }) {
   const [useSymbols, setUseSymbols] = useState(true);
 
   const handleSave = async () => {
+    if (limitReached) return;
     if (!label.trim() || !password) {
       setError("Add a description and a password.");
       return;
@@ -50,6 +73,7 @@ export default function EncodeCard({ onSaved }) {
       setTimeout(() => setSaved(false), 2000);
       onSaved();
     } catch (err) {
+      if (err?.response?.status === 429) onSaved();
       setError(getErrorMessage(err, "Could not save the password."));
     } finally {
       setLoading(false);
@@ -87,6 +111,25 @@ export default function EncodeCard({ onSaved }) {
   return (
     <section className="panel card">
       <h2 className="card-title">🔒 Encode Password</h2>
+
+      {usage && (
+        <div className={limitReached ? "usage-box full" : "usage-box"}>
+          <div className="usage-head">
+            <span>Daily saves</span>
+            <strong>
+              {usage.used} / {usage.limit}
+            </strong>
+          </div>
+          <div className="usage-bar">
+            <span style={{ width: `${percent}%` }} />
+          </div>
+          <p className="usage-note">
+            {limitReached
+              ? `Daily limit reached. You can save again in ${formatWait(usage.resets_at)}.`
+              : `${usage.remaining} ${usage.remaining === 1 ? "save" : "saves"} left in the last 24 hours.`}
+          </p>
+        </div>
+      )}
 
       <div className="field">
         <label>Describe</label>
@@ -171,8 +214,12 @@ export default function EncodeCard({ onSaved }) {
 
       {error && <p className="error-text">{error}</p>}
 
-      <button className="btn btn-primary" onClick={handleSave} disabled={loading}>
-        {loading ? "Saving..." : saved ? "Saved" : "⚡ Save Securely"}
+      <button
+        className="btn btn-primary"
+        onClick={handleSave}
+        disabled={loading || limitReached}
+      >
+        {loading ? "Saving..." : limitReached ? "Daily limit reached" : saved ? "Saved" : "⚡ Save Securely"}
       </button>
     </section>
   );

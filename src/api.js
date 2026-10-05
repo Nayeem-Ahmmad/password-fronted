@@ -61,6 +61,8 @@ export const resetMasterKey = (new_master_key, reset_token) =>
 
 export const fetchEntries = () => http.get("/entries/");
 
+export const fetchUsage = () => http.get("/usage/");
+
 export const encodePassword = (name, password) =>
   http.post("/encode/", { name, password });
 
