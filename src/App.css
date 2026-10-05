@@ -645,7 +645,11 @@
 .entry-grid {
   align-items: start;
 }
-
+.page-ellipsis {
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 0 2px;
+}
 .modal-overlay {
   position: fixed;
   inset: 0;

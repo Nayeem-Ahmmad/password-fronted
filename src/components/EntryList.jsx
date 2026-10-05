@@ -2,8 +2,29 @@ import { useEffect, useState } from "react";
 import PasswordField from "./PasswordField";
 import { getErrorMessage } from "../api";
 
+
 const MAX_NAME_LENGTH = 20;
 const ITEMS_PER_PAGE = 9;
+const MOBILE_PAGE_WINDOW = 4;
+const DESKTOP_PAGE_WINDOW = 8;
+
+const usePageWindowSize = () => {
+  const [size, setSize] = useState(
+    typeof window !== "undefined" && window.innerWidth >= 768
+      ? DESKTOP_PAGE_WINDOW
+      : MOBILE_PAGE_WINDOW
+  );
+
+  useEffect(() => {
+    const onResize = () => {
+      setSize(window.innerWidth >= 768 ? DESKTOP_PAGE_WINDOW : MOBILE_PAGE_WINDOW);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  return size;
+};
 
 const truncateName = (name) =>
   name.length > MAX_NAME_LENGTH ? `${name.slice(0, MAX_NAME_LENGTH)}...` : name;
@@ -31,6 +52,9 @@ export default function EntryList({ entries, loading, onUse, onDelete, onUpdate 
   const [editError, setEditError] = useState("");
   const [editLoading, setEditLoading] = useState(false);
 
+  const pageWindowSize = usePageWindowSize();
+  const [windowStart, setWindowStart] = useState(1);
+
   const handleCopy = async (id, value) => {
     await navigator.clipboard.writeText(value);
     setCopiedId(id);
@@ -50,9 +74,32 @@ export default function EntryList({ entries, loading, onUse, onDelete, onUpdate 
     setCurrentPage(1);
   }, [query]);
 
+  useEffect(() => {
+    setWindowStart(1);
+  }, [query]);
+
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
+  };
+
+  const windowEnd = Math.min(windowStart + pageWindowSize - 1, totalPages);
+const visiblePageNumbers = Array.from(
+  { length: windowEnd - windowStart + 1 },
+  (_, i) => windowStart + i
+);
+
+const goPrevWindow = () => {
+  const newStart = Math.max(1, windowStart - pageWindowSize);
+  setWindowStart(newStart);
+  setCurrentPage(newStart);
+};
+
+  const goNextWindow = () => {
+    const newStart = windowStart + pageWindowSize;
+    if (newStart > totalPages) return;
+    setWindowStart(newStart);
+    setCurrentPage(newStart);
   };
 
   // ---------- delete ----------
@@ -170,30 +217,30 @@ export default function EntryList({ entries, loading, onUse, onDelete, onUpdate 
             ))}
           </div>
 
-          {totalPages > 1 && (
+                    {totalPages > 1 && (
             <div className="pagination">
-              <button
-                className="page-btn"
-                onClick={() => goToPage(safePage - 1)}
-                disabled={safePage === 1}
-              >
+              <button className="page-btn" onClick={goPrevWindow} disabled={windowStart === 1}>
                 Prev
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              {windowStart > 1 && <span className="page-ellipsis">...</span>}
+
+              {visiblePageNumbers.map((page) => (
                 <button
                   key={page}
                   className={`page-btn ${page === safePage ? "page-btn-active" : ""}`}
-                  onClick={() => goToPage(page)}
+                  onClick={() => setCurrentPage(page)}
                 >
                   {page}
                 </button>
               ))}
 
+              {windowEnd < totalPages && <span className="page-ellipsis">...</span>}
+
               <button
                 className="page-btn"
-                onClick={() => goToPage(safePage + 1)}
-                disabled={safePage === totalPages}
+                onClick={goNextWindow}
+                disabled={windowEnd >= totalPages}
               >
                 Next
               </button>
